@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WB SEO-аудитор карточки v5</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --line:#e5e7eb;
+      --text:#172033;
+      --muted:#6b7280;
+      --accent:#6d28d9;
+      --accent2:#f97316;
+      --ok:#15803d;
+      --warn:#c2410c;
+      --bad:#b91c1c;
+      --info:#2563eb;
+      --shadow:0 12px 28px rgba(15,23,42,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{width:min(1480px,calc(100% - 28px));margin:22px auto 40px}
+    .hero,.panel,.card{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
+    .hero{padding:24px;margin-bottom:18px;background:linear-gradient(135deg,rgba(109,40,217,.11),rgba(249,115,22,.11));border-color:rgba(109,40,217,.14)}
+    .hero h1{margin:0 0 10px;font-size:32px;line-height:1.14}
+    .hero p{margin:0;max-width:1050px;color:var(--muted);line-height:1.65;font-size:15px}
+    .row-pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+    .pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:700;border:1px solid #e5e7eb;background:#f9fafb}
+    .pill.info{color:var(--accent);background:rgba(109,40,217,.08);border-color:rgba(109,40,217,.18)}
+    .pill.warn{color:var(--warn);background:rgba(194,65,12,.08);border-color:rgba(194,65,12,.18)}
+    .pill.good{color:var(--ok);background:rgba(21,128,61,.08);border-color:rgba(21,128,61,.18)}
+    .pill.bad{color:var(--bad);background:rgba(185,28,28,.08);border-color:rgba(185,28,28,.18)}
+    .grid{display:grid;grid-template-columns:430px 1fr;gap:20px;align-items:start}
+    .panel{padding:18px;position:sticky;top:16px}
+    .card{padding:18px}
+    h2,h3,h4{margin:0 0 12px}
+    .sub{color:var(--muted);font-size:13px;line-height:1.5;margin-top:-4px;margin-bottom:14px}
+    .field{margin-bottom:14px}
+    .field label{display:block;margin-bottom:8px;font-weight:700;font-size:13px}
+    .hint{display:block;margin-top:6px;color:var(--muted);font-size:12px;line-height:1.45}
+    input,textarea,select{width:100%;border:1px solid #d7dce5;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.45;color:var(--text);outline:none;background:#fff}
+    textarea{min-height:92px;resize:vertical}
+    input:focus,textarea:focus,select:focus{border-color:rgba(109,40,217,.55);box-shadow:0 0 0 4px rgba(109,40,217,.08)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+    button{border:0;border-radius:14px;padding:12px 14px;font-size:14px;font-weight:700;cursor:pointer;transition:.18s ease}
+    button:hover{transform:translateY(-1px)}
+    .btn1{background:linear-gradient(135deg,var(--accent),#8b5cf6);color:#fff}
+    .btn2{background:#f3f4f6;color:var(--text);border:1px solid #e5e7eb}
+    .btn3{background:linear-gradient(135deg,var(--accent2),#fb923c);color:#fff}
+    .btn4{background:#fff;color:var(--text);border:1px dashed #cfd5df}
+    .status{margin-top:14px;padding:12px 14px;border-radius:14px;font-size:13px;line-height:1.55;background:rgba(37,99,235,.08);color:#1d4ed8;border:1px solid rgba(37,99,235,.15)}
+    .stack{display:grid;gap:20px}
+    .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:14px}
+    .metric{padding:16px;border:1px solid #eceff5;border-radius:18px;background:#fafafa}
+    .metric .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:700;margin-bottom:8px}
+    .metric .value{font-size:32px;font-weight:800;line-height:1;margin-bottom:8px}
+    .metric .desc{color:var(--muted);font-size:13px;line-height:1.5}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+    .three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .box{border:1px solid #eceff5;border-radius:18px;padding:16px;background:#fff}
+    .kv{display:grid;grid-template-columns:180px 1fr;gap:8px 14px}
+    .kv div:nth-child(odd){color:var(--muted);font-size:13px;font-weight:700}
+    .kv div:nth-child(even){font-size:14px;line-height:1.55}
+    .problem-list,.query-list{display:grid;gap:12px}
+    .problem,.solution,.query-item,.test{padding:14px;border-radius:16px;border:1px solid #eceff5;background:#fcfcfd}
+    .problem strong,.solution strong,.query-item strong,.test strong{display:block;margin-bottom:6px;font-size:15px}
+    .problem small,.solution small,.query-item small,.test small{display:block;color:var(--muted);line-height:1.55;font-size:13px}
+    .score-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .bar{height:10px;border-radius:999px;background:#eceff5;overflow:hidden;margin-bottom:14px}
+    .bar span{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .25s ease}
+    .preview{border:1px solid #eceff5;border-radius:18px;background:#fff;padding:16px;min-height:170px}
+    .preview p{margin:0 0 12px;line-height:1.7;font-size:15px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:14px}
+    .photo-card{border:1px solid #eceff5;border-radius:18px;padding:14px;background:#fff}
+    .photo-card h4{margin:0 0 8px;font-size:16px}
+    .photo-card p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+    .photo-card img{width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid #eceff5;margin-bottom:8px;display:block}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .chip{display:inline-block;padding:4px 8px;border-radius:999px;background:#f3f4f6;color:#374151;font-size:12px;font-weight:700}
+    .footer-note{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.6}
+    .hidden{display:none!important}
+    .query-item .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .meta-badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#4b5563}
+    .meta-badge.file{background:rgba(37,99,235,.08);color:#1d4ed8}
+    .meta-badge.manual{background:rgba(109,40,217,.08);color:#6d28d9}
+    .meta-badge.generated{background:rgba(249,115,22,.08);color:#c2410c}
+    .meta-badge.good{background:rgba(21,128,61,.08);color:#166534}
+    .meta-badge.bad{background:rgba(185,28,28,.08);color:#991b1b}
+    @media (max-width:1180px){
+      .grid{grid-template-columns:1fr}
+      .panel{position:static}
+      .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .two,.three{grid-template-columns:1fr}
+    }
+    @media (max-width:760px){
+      .wrap{width:min(100% - 20px,100%)}
+      .row,.actions,.metrics{grid-template-columns:1fr}
+      .hero h1{font-size:26px}
+      .kv{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>WB SEO-аудитор карточки v5</h1>
+    <p>
+      Версия с жёсткой фильтрацией запросов. Приложение не склеивает случайные характеристики в «ключи», отдельно
+      показывает ВЧ, СЧ и НЧ, вычищает персонажей и стоп-слова на каждом этапе, а новое название и описание
+      собирает только из разрешённого семантического ядра.
+    </p>
+    <div class="row-pills">
+      <span class="pill good">Отдельные блоки ВЧ / СЧ / НЧ</span>
+      <span class="pill good">Строгий стоп-лист по персонажам и брендам</span>
+      <span class="pill good">Человеческое текстовое SEO-описание</span>
+      <span class="pill warn">Если WB API блокирует CORS в браузере, загрузи карточку через ручной JSON</span>
+    </div>
+  </section>
+
+  <div class="grid">
+    <aside class="panel">
+      <h2>Настройки и запуск</h2>
+
+      <div class="field">
+        <label for="wbToken">WB API token</label>
+        <input id="wbToken" type="password" placeholder="Вставьте токен WB">
+        <span class="hint">Токен нужен для загрузки карточки продавца через API.</span>
+      </div>
+
+      <div class="field">
+        <label for="productQuery">Артикул / nmID / vendorCode</label>
+        <input id="productQuery" type="text" placeholder="Например: 195533896">
+        <span class="hint">Достаточно одного значения. Поиск карточки идёт через textSearch.</span>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="mode">Режим</label>
+          <select id="mode">
+            <option value="standard">Обычная проверка</option>
+            <option value="season">Под сезон</option>
+            <option value="holiday">Под праздник</option>
+            <option value="test">Под тест карточки</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="descriptionLimit">Лимит описания</label>
+          <input id="descriptionLimit" type="number" min="300" max="5000" step="50" value="2000">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="focus">Фокус задачи</label>
+        <input id="focus" type="text" placeholder="Например: убрать персонажей, усилить подарочный сценарий">
+        <span class="hint">Необязательно. Используется как мягкая подсказка при сборке итогового текста.</span>
+      </div>
+
+      <div class="field">
+        <label for="keywordFile">Файл справочника запросов (CSV / XLSX)</label>
+        <input id="keywordFile" type="file" accept=".csv,.xlsx,.xls">
+        <span class="hint">Подойдут выгрузки WB с колонками вроде «Поисковый запрос», «Количество запросов», «Запросов в среднем за день», «Предмет».</span>
+      </div>
+
+      <div class="field">
+        <label for="manualKeywords">Ручные ключи для усиления</label>
+        <textarea id="manualKeywords" placeholder="Например: готовые выкройки из фетра, шить своими руками, набор для шитья из фетра"></textarea>
+        <span class="hint">Добавляй только реальные релевантные фразы. Они не заменяют файл, а лишь дополняют его.</span>
+      </div>
+
+      <div class="field">
+        <label for="forbiddenWords">Что исключить</label>
+        <textarea id="forbiddenWords" placeholder="Например: уэнсдей, wednesday, addams, персонаж, фильм"></textarea>
+        <span class="hint">Сюда вноси героев, франшизы, чужие бренды и любые спорные сущности.</span>
+      </div>
+
+      <div class="field">
+        <label for="manualJson">Ручной JSON карточки</label>
+        <textarea id="manualJson" placeholder="Если WB API не сработал в браузере, вставьте сюда JSON карточки вручную"></textarea>
+        <span class="hint">Поддерживается и объект карточки, и ответ API с полем cards.</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn1" id="loadBtn">Загрузить карточку</button>
+        <button class="btn2" id="analyzeBtn">Проверить карточку</button>
+        <button class="btn3" id="generateBtn">Сгенерировать решение</button>
+        <button class="btn4" id="clearBtn">Очистить форму</button>
+      </div>
+
+      <div class="status" id="statusBox">Статус: ожидание загрузки карточки.</div>
+
+      <div class="footer-note">
+        В этой версии в ВЧ/СЧ/НЧ идут только реальные запросы из файла и ручные ключи, которые прошли фильтр.
+        Характеристики карточки больше не превращаются в псевдо-ключи.
+      </div>
+    </aside>
+
+    <main class="stack">
+      <section class="card">
+        <h2>Краткая сводка</h2>
+        <div class="sub">После проверки здесь появится оценка карточки, качества ядра и чистоты запроса</div>
+        <div class="metrics">
+          <div class="metric">
+            <div class="label">Общий балл</div>
+            <div class="value" id="scoreTotal">0.0</div>
+            <div class="desc" id="scoreTotalDesc">Карточка ещё не проверена</div>
+          </div>
+          <div class="metric">
+            <div class="label">Наименование</div>
+            <div class="value" id="scoreTitle">0.0</div>
+            <div class="desc" id="scoreTitleDesc">Нет данных</div>
+          </div>
+          <div class="metric">
+            <div class="label">Описание</div>
+            <div class="value" id="scoreDescription">0.0</div>
+            <div class="desc" id="scoreDescriptionDesc">Нет данных</div>
+          </div>
+          <div class="metric">
+            <div class="label">Качество ядра</div>
+            <div class="value" id="scoreKernel">0.0</div>
+            <div class="desc" id="scoreKernelDesc">Нет данных</div>
+          </div>
+        </div>
+        <div class="row-pills" id="topPills"></div>
+      </section>
+
+      <section class="card">
+        <h2>Данные текущей карточки</h2>
+        <div class="sub">Основные поля карточки и текущее содержимое</div>
+        <div class="two">
+          <div class="box">
+            <h3>Основная информация</h3>
+            <div class="kv" id="cardInfoKv">
+              <div>Статус</div><div>Карточка ещё не загружена</div>
+            </div>
+          </div>
+          <div class="box">
+            <h3>Текущие тексты</h3>
+            <div class="problem-list">
+              <div class="problem">
+                <strong>Наименование</strong>
+                <small id="currentTitle">Нет данных</small>
+              </div>
+              <div class="problem">
+                <strong>Описание</strong>
+                <small id="currentDescription">Нет данных</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="photos" id="photoStrip"></div>
+      </section>
+
+      <section class="card">
+        <h2>Разбор семантики</h2>
+        <div class="sub">Только реальные и прошедшие фильтр запросы. Отдельно показываются спорные и исключённые.</div>
+        <div class="three">
+          <div class="box">
+            <h3>ВЧ</h3>
+            <div class="query-list" id="vchList"></div>
+          </div>
+          <div class="box">
+            <h3>СЧ</h3>
+            <div class="query-list" id="schList"></div>
+          </div>
+          <div class="box">
+            <h3>НЧ</h3>
+            <div class="query-list" id="nchList"></div>
+          </div>
+        </div>
+        <div class="two" style="margin-top:18px">
+          <div class="box">
+            <h3>Спорные запросы</h3>
+            <div class="query-list" id="reviewList"></div>
+          </div>
+          <div class="box">
+            <h3>Исключённые запросы</h3>
+            <div class="query-list" id="excludedList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Что не так в карточке</h2>
+        <div class="sub">Отдельный аудит названия, описания и качества семантического ядра</div>
+        <div class="two">
+          <div class="box">
+            <div class="score-line"><strong>Наименование</strong><span id="titleScoreBadge">0.0 / 10</span></div>
+            <div class="bar"><span id="titleBar"></span></div>
+            <div class="problem-list" id="titleProblems"></div>
+          </div>
+          <div class="box">
+            <div class="score-line"><strong>Описание</strong><span id="descriptionScoreBadge">0.0 / 10</span></div>
+            <div class="bar"><span id="descriptionBar"></span></div>
+            <div class="problem-list" id="descriptionProblems"></div>
+          </div>
+        </div>
+        <div class="two" style="margin-top:18px">
+          <div class="box">
+            <div class="score-line"><strong>Семантическое ядро</strong><span id="kernelScoreBadge">0.0 / 10</span></div>
+            <div class="bar"><span id="kernelBar"></span></div>
+            <div class="problem-list" id="kernelProblems"></div>
+          </div>
+          <div class="box">
+            <div class="score-line"><strong>Медиа и тесты</strong><span id="mediaScoreBadge">0.0 / 10</span></div>
+            <div class="bar"><span id="mediaBar"></span></div>
+            <div class="problem-list" id="mediaProblems"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Готовое решение</h2>
+        <div class="sub">Новое наименование, текстовое SEO-описание и реально использованные запросы</div>
+        <div class="two">
+          <div class="box">
+            <h3>Рекомендуемое наименование</h3>
+            <div class="problem-list" id="titleSolutionList">
+              <div class="solution">
+                <strong>Пока нет готового варианта</strong>
+                <small>Нажмите «Сгенерировать решение» после загрузки карточки и файла запросов.</small>
+              </div>
+            </div>
+          </div>
+          <div class="box">
+            <h3>Служебная информация</h3>
+            <div class="kv" id="solutionMetaKv">
+              <div>Лимит описания</div><div>2000 символов</div>
+              <div>Режим</div><div>Обычная проверка</div>
+              <div>Сезонный угол</div><div>Авто</div>
+              <div>Использованные ключи</div><div>Ещё не собраны</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="box" style="margin-top:18px">
+          <h3>HTML-описание</h3>
+          <div class="preview" id="htmlPreview">Здесь появится HTML-описание.</div>
+          <div class="toolbar">
+            <button class="btn1" id="copyHtmlBtn">Скопировать HTML</button>
+            <button class="btn2" id="copyTitleBtn">Скопировать наименование</button>
+            <button class="btn2" id="copyTextBtn">Скопировать текст без HTML</button>
+            <button class="btn4" id="downloadBtn">Скачать отчёт JSON</button>
+          </div>
+        </div>
+
+        <div class="two" style="margin-top:18px">
+          <div class="box">
+            <h3>Ключи, вошедшие в название</h3>
+            <div class="query-list" id="usedTitleQueries"></div>
+          </div>
+          <div class="box">
+            <h3>Ключи, вошедшие в описание</h3>
+            <div class="query-list" id="usedDescriptionQueries"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Гипотезы для теста карточки</h2>
+        <div class="sub">Тесты главного фото, подачи и структуры карточки</div>
+        <div class="problem-list" id="testHypotheses">
+          <div class="test">
+            <strong>Пока нет гипотез</strong>
+            <small>После анализа появятся рекомендации по тестам главного фото и подаче УТП.</small>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script>
+const STORAGE_KEY = 'wb_seo_auditor_v5';
+const STOPWORDS = ['и','в','во','на','по','под','для','из','с','со','к','ко','о','об','от','до','или','а','но','как','это','этот','эта','эти','у','же','не','его','ее','её','их','над','при','без','бы','то','за','мы','вы','они','она','он','быть','можно','такой','такая','такие','товар','вариант'];
+const SEO_SERVICE_PHRASES = [
+  'переспам','релевантность','seo','seo-текст','хвост поиска','нативно','нативный','естественно встроен',
+  'встроен в текст','усиливает карточку','усиливает выдачу','усиливает релевантность','раскрывают назначение товара',
+  'охватить более точный хвост','карточку усиливает запрос','дополнительно в описание естественно входит',
+  'подходит для сценария покупки','удобный вариант в категории','если он уместен для вашей аудитории'
+];
+const BUILT_IN_BANNED = [
+  'nike','adidas','reebok','puma','apple','iphone','samsung','xiaomi','lego','barbie','disney','marvel','dc',
+  'harry potter','гарри поттер','марвел','дисней','человек-паук','spider-man','hello kitty','pokemon',
+  'покемон','minecraft','майнкрафт','roblox','роблокс','уэнсдей','wednesday','addams','аддамс','семейка аддамс',
+  'семейки аддамс','персонаж','герой','фильм','сериал','оригинал','лучший','100% гарантия','гарантия 100%'
+];
+const NOISE_CLUSTER_PATTERNS = [
+  /свеч/i,/мыловар/i,/сквиш/i,/валян/i,/гравюр/i,/эпоксид/i,/папертол/i,/бабочкар/i,/ферма бабочек/i,
+  /тока бока/i,/toca boca/i,/jelliz/i,/джелли/i,/bearbrick/i,/nebulous/i,/домикис/i,/аватар ворлд/i
+];
+const EXTRA_TRASH_PHRASES = [
+  'для любимой','подруге','вещь рука','убрать ей','любимой','подруге','для ребенка','для ребёнка'
+];
+const ROOT_LIMITS = {nabor:5, shit:4, fetr:4, igrushk:4, kukl:4};
+
+const state = {
+  card: null,
+  subjectMeta: null,
+  seasonContext: null,
+  rawKeywordRows: [],
+  keywordObjects: [],
+  classified: null,
+  audit: null,
+  generated: null
+};
+
+const $ = id => document.getElementById(id);
+
+function saveSettings(){
+  const data = {
+    wbToken: $('wbToken').value,
+    productQuery: $('productQuery').value,
+    mode: $('mode').value,
+    descriptionLimit: $('descriptionLimit').value,
+    focus: $('focus').value,
+    manualKeywords: $('manualKeywords').value,
+    forbiddenWords: $('forbiddenWords').value,
+    manualJson: $('manualJson').value
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+function loadSettings(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    Object.entries(data).forEach(([k,v]) => { if($(k) && typeof v !== 'undefined') $(k).value = v; });
+  }catch(e){}
+}
+function setStatus(text, type='info'){
+  const box = $('statusBox');
+  box.textContent = 'Статус: ' + text;
+  if(type === 'error'){
+    box.style.background = 'rgba(185,28,28,.08)';
+    box.style.color = '#991b1b';
+    box.style.borderColor = 'rgba(185,28,28,.16)';
+  }else if(type === 'success'){
+    box.style.background = 'rgba(21,128,61,.08)';
+    box.style.color = '#166534';
+    box.style.borderColor = 'rgba(21,128,61,.16)';
+  }else{
+    box.style.background = 'rgba(37,99,235,.08)';
+    box.style.color = '#1d4ed8';
+    box.style.borderColor = 'rgba(37,99,235,.16)';
+  }
+}
+function normalizeWhitespace(str=''){ return String(str).replace(/\s+/g,' ').trim(); }
+function escapeHtml(str=''){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function stripHtml(html=''){
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return (div.textContent || div.innerText || '').replace(/\s+/g,' ').trim();
+}
+function unique(arr){ return [...new Set(arr.filter(Boolean))]; }
+function splitCsvLike(value=''){
+  return unique(String(value).split(/[,;\n]/).map(v => normalizeWhitespace(v)).filter(Boolean));
+}
+function countRegexMatches(text='', regex){
+  const m = String(text).match(regex);
+  return m ? m.length : 0;
+}
+function isNoiseClusterQuery(query=''){
+  const q = cleanText(query);
+  return NOISE_CLUSTER_PATTERNS.some(rgx => rgx.test(q));
+}
+function clipByLength(text='', max){
+  if(!max || text.length <= max) return text;
+  return smartTrimEnding(text.slice(0, max)).replace(/[,.!?;:]?$/, '.');
+}
+function withoutPastHolidays(daysAhead=90){
+  const now = new Date();
+  const y = now.getFullYear();
+  const mk = (m,d,name) => new Date(y,m-1,d);
+  const base = [
+    {name:'Пасха', date:mk(4,20,'Пасха')}, // ориентир, дата может меняться
+    {name:'1 июня — День защиты детей', date:mk(6,1,'1 июня — День защиты детей')},
+    {name:'1 сентября — Подготовка к школе', date:mk(9,1,'1 сентября — Подготовка к школе')},
+    {name:'14 февраля', date:mk(2,14,'14 февраля')},
+    {name:'23 февраля', date:mk(2,23,'23 февраля')},
+    {name:'8 марта', date:mk(3,8,'8 марта')},
+    {name:'Новый год', date:mk(12,25,'Новый год')}
+  ].map(item => {
+    const date = new Date(item.date);
+    if(date < now){
+      date.setFullYear(date.getFullYear() + 1);
+    }
+    return {name:item.name, date};
+  }).sort((a,b) => a.date - b.date);
+  const horizon = new Date(now);
+  horizon.setDate(horizon.getDate() + daysAhead);
+  return base.filter(item => item.date >= now && item.date <= horizon);
+}
+function reduceKeywordSpam(text=''){
+  let out = normalizeWhitespace(text);
+  const exact = /\bнабор для шитья\b/gi;
+  let count = 0;
+  out = out.replace(exact, m => {
+    count += 1;
+    if(count <= 2) return m;
+    return count === 3 ? 'набор' : 'комплект';
+  });
+  const replacer = (rgx, max, replacement) => {
+    let hits = 0;
+    out = out.replace(rgx, m => {
+      hits += 1;
+      return hits > max ? replacement : m;
+    });
+  };
+  replacer(/\bнабор\w*\b/gi, ROOT_LIMITS.nabor, 'комплект');
+  replacer(/\bшит\w*\b/gi, ROOT_LIMITS.shit, 'творчество');
+  replacer(/\bфетр\w*\b/gi, ROOT_LIMITS.fetr, 'материал');
+  replacer(/\bигруш\w*\b/gi, ROOT_LIMITS.igrushk, 'изделие');
+  replacer(/\bкукл\w*\b/gi, ROOT_LIMITS.kukl, 'мягкая фигурка');
+  return cleanupHumanText(out);
+}
+function getDescriptionLimit(){
+  const n = Number($('descriptionLimit').value || 2000);
+  return Number.isFinite(n) && n >= 300 ? n : 2000;
+}
+function getModeLabel(mode){
+  return {standard:'Обычная проверка',season:'Под сезон',holiday:'Под праздник',test:'Под тест карточки'}[mode] || 'Обычная проверка';
+}
+function isLikelyJson(str=''){
+  const s = String(str).trim();
+  return s.startsWith('{') || s.startsWith('[');
+}
+function safeJsonParse(str){
+  try{return JSON.parse(str);}catch(e){return null;}
+}
+function normalizeCardPayload(input){
+  if(!input) return null;
+  if(Array.isArray(input?.cards)) return input.cards[0] || null;
+  if(Array.isArray(input?.data?.cards)) return input.data.cards[0] || null;
+  if(Array.isArray(input)) return input[0] || null;
+  if(input?.nmID || input?.title || input?.vendorCode) return input;
+  return null;
+}
+function getAllForbiddenWords(){
+  return unique([...BUILT_IN_BANNED, ...splitCsvLike($('forbiddenWords').value).map(v => v.toLowerCase())]);
+}
+function cleanText(value=''){
+  return normalizeWhitespace(String(value).toLowerCase())
+    .replace(/[«»"'`]/g,' ')
+    .replace(/[.,;:!?()[\]{}\/\\|+=_*№%$#@~]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function tokenize(value=''){
+  return cleanText(value).split(/\s+/).map(v => v.trim()).filter(v => v && !STOPWORDS.includes(v) && v.length > 1);
+}
+function normalizeText(value=''){
+  return tokenize(value).join(' ');
+}
+function containsForbidden(value, forbidden){
+  const lower = cleanText(value);
+  return forbidden.some(word => lower.includes(cleanText(word)));
+}
+function getWords(text=''){
+  return cleanText(text).split(/\s+/).filter(v => v && v.length > 2 && !STOPWORDS.includes(v));
+}
+function countRepeatedRoots(text=''){
+  const freq = {};
+  for(const w of getWords(text)){ freq[w] = (freq[w] || 0) + 1; }
+  return Object.entries(freq).filter(([,count]) => count > 2).map(([w,count]) => `${w} ×${count}`);
+}
+function singularizeQueryStart(query=''){
+  let q = normalizeWhitespace(query);
+  q = q.replace(/^Наборы\b/i,'Набор');
+  q = q.replace(/^наборы\b/i,'набор');
+  return q;
+}
+function titleCaseFirst(value=''){
+  const text = normalizeWhitespace(value);
+  return text ? text[0].toUpperCase() + text.slice(1) : '';
+}
+function removeForbiddenFromText(text=''){
+  let result = String(text);
+  for(const word of getAllForbiddenWords()){
+    const safe = cleanText(word);
+    if(!safe) continue;
+    const reg = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+    result = result.replace(reg,' ');
+  }
+  return normalizeWhitespace(result);
+}
+
+function containsSeoServicePhrase(text=''){
+  const lower = cleanText(text);
+  return SEO_SERVICE_PHRASES.some(phrase => lower.includes(cleanText(phrase)));
+}
+function removeSeoServicePhrases(text=''){
+  let result = String(text);
+  SEO_SERVICE_PHRASES.forEach(phrase => {
+    const safe = phrase.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    result = result.replace(new RegExp(safe,'gi'),' ');
+  });
+  return normalizeWhitespace(result);
+}
+function sanitizeCharacteristicText(value=''){
+  let text = removeForbiddenFromText(value || '');
+  text = text.replace(/[«»"]/g,' ');
+  text = text.replace(/\b(вещь рука|любимой|подруге|для ребенка|для ребёнка|для девочки|для мальчика|убрать ей|ей|ему)\b/gi,' ');
+  text = text.replace(/\b(полный набор|товар|вариант|сценарий покупки)\b/gi,' ');
+  EXTRA_TRASH_PHRASES.forEach(p => {
+    text = text.replace(new RegExp(p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),' ');
+  });
+  text = text.replace(/\s+/g,' ').trim();
+  return text;
+}
+function splitUsefulItems(value=''){
+  return unique(String(value || '')
+    .split(/[,;]+/)
+    .map(v => sanitizeCharacteristicText(v))
+    .filter(v => v && v.length > 2 && !containsSeoServicePhrase(v))
+  );
+}
+function normalizeQueryForTitle(query=''){
+  let q = singularizeQueryStart(removeForbiddenFromText(query || ''));
+  q = q.replace(/\b(для творчества|для подарка|подарок|для ребенка|для ребёнка|для девочки|для мальчика|детский|любимой|подруге)\b/gi,' ');
+  q = q.replace(/\b(своими руками)\b/gi,' своими руками');
+  q = q.replace(/\s+/g,' ').trim();
+  return q;
+}
+function sentenceCase(text=''){
+  const t = normalizeWhitespace(text);
+  return t ? t[0].toUpperCase() + t.slice(1) : '';
+}
+function cleanupHumanText(text=''){
+  let result = removeSeoServicePhrases(removeForbiddenFromText(text || ''));
+  result = result.replace(/\s+/g,' ');
+  result = result.replace(/\s+([,.!?:;])/g,'$1');
+  result = result.replace(/([,.!?:;]){2,}/g,'$1');
+  return normalizeWhitespace(result);
+}
+
+function smartTrimEnding(text=''){
+  return normalizeWhitespace(String(text || '')).replace(/[\s,;:—-]+$/,'');
+}
+
+function normalizeSentence(text=''){
+  let s = cleanupHumanText(text || '');
+  s = s.replace(/\s+/g,' ');
+  s = s.replace(/^[—-]\s*/,'');
+  s = s.replace(/\s+—\s+/g,' — ');
+  s = smartTrimEnding(s);
+  if(!s) return '';
+  // Ставим точку, если похоже на законченную мысль
+  if(!/[.!?]$/.test(s)) s += '.';
+  return sentenceCase(s);
+}
+
+function dedupeSimilarSentences(sentences){
+  const seen = new Set();
+  const out = [];
+  for(const s of sentences){
+    const key = cleanText(s).replace(/\b(очень|просто|легко|удобно|идеально|лучший|отличный)\b/g,'').trim();
+    if(!key) continue;
+    if(seen.has(key)) continue;
+    seen.add(key);
+    out.push(s);
+  }
+  return out;
+}
+
+function splitToBullets(value=''){
+  return unique(String(value || '')
+    .split(/[\n•●\-–—;]+/g)
+    .map(v => sanitizeCharacteristicText(v))
+    .map(v => smartTrimEnding(v))
+    .filter(v => v && v.length > 2)
+  );
+}
+
+function clampBullets(items, max=5){
+  return unique(items.filter(Boolean)).slice(0, Math.max(1, max));
+}
+
+function getSubjectTokens(card){
+  return tokenize(card?.subjectName || '');
+}
+function getTitleTokens(card){
+  return tokenize(card?.title || '');
+}
+function characteristicValue(card, regex){
+  const chars = Array.isArray(card?.characteristics) ? card.characteristics : [];
+  const found = chars.find(c => regex.test(String(c.name || '')));
+  if(!found) return '';
+  const val = Array.isArray(found.value) ? found.value.join(', ') : String(found.value || '');
+  return normalizeWhitespace(val);
+}
+function buildCore(card){
+  const manualTokens = tokenize($('manualKeywords').value);
+  const subjectName = normalizeWhitespace(card?.subjectName || '');
+  const title = normalizeWhitespace(card?.title || '');
+  const description = normalizeWhitespace(card?.description || '');
+  const material = characteristicValue(card, /материал/i);
+  const purpose = characteristicValue(card, /назнач|примен|использ/i);
+  const bundle = characteristicValue(card, /комплект|комплектац|состав|колич|детал/i);
+  const feature = characteristicValue(card, /особ|преим|форма|тип|вид/i);
+
+  const categoryWords = tokenize(subjectName);
+  const titleWords = tokenize(title);
+  const descriptionWords = tokenize(description);
+  const materialWords = tokenize(material);
+  const purposeWords = tokenize(purpose);
+  const bundleWords = tokenize(bundle);
+  const featureWords = tokenize(feature);
+  const manualWords = manualTokens;
+  const coreWords = unique([...categoryWords, ...titleWords, ...materialWords, ...purposeWords, ...bundleWords, ...featureWords, ...manualWords]);
+  return {subjectName,title,description,material,purpose,bundle,feature,categoryWords,titleWords,descriptionWords,materialWords,purposeWords,bundleWords,featureWords,manualWords,coreWords};
+}
+function detectSeasonContext(mode, card){
+  const upcoming = withoutPastHolidays(90);
+  const holiday = upcoming.length ? upcoming[0].name : 'Без специального акцента';
+  const tags = ['творчество','подарок','хобби'];
+
+  if(mode === 'standard'){
+    return {modeLabel:getModeLabel(mode),holiday:'Без специального акцента',angle:'Фокус на чистой релевантности карточки и понятном продающем тексте.',seasonalKeywords:[]};
+  }
+  if(mode === 'test'){
+    return {modeLabel:getModeLabel(mode),holiday,angle:'Фокус на тестах гипотез: название, подача, главное фото, сезонный угол.',seasonalKeywords:tags.slice(0,4), upcomingHolidays:upcoming.map(i => i.name)};
+  }
+  return {
+    modeLabel:getModeLabel(mode),
+    holiday,
+    angle: mode === 'holiday' ? 'Фокус на мягком подарочном сценарии без переспама.' : 'Фокус на сезонном спросе и сценариях использования без спама.',
+    seasonalKeywords:tags.slice(0,4),
+    upcomingHolidays:upcoming.map(i => i.name)
+  };
+}
+function getHeaderIndex(headers, variants){
+  return headers.findIndex(h => variants.some(v => String(h).toLowerCase().includes(v)));
+}
+function findHeaderRow(rows){
+  return rows.findIndex(row => row.some(cell => String(cell).toLowerCase().includes('поисковый запрос') || String(cell).toLowerCase().includes('query')));
+}
+function rowsToKeywordObjects(rows, workbookMeta={}){
+  if(!Array.isArray(rows) || rows.length < 2) return [];
+  const headerRowIndex = findHeaderRow(rows);
+  if(headerRowIndex === -1) throw new Error('В файле не найдена строка заголовков с колонкой «Поисковый запрос».');
+  const headers = rows[headerRowIndex].map(v => normalizeWhitespace(v));
+  const dataRows = rows.slice(headerRowIndex + 1);
+
+  const queryIdx = getHeaderIndex(headers, ['поисковый запрос','query','keyword','запрос']);
+  const countIdx = getHeaderIndex(headers, ['количество запросов','частот','count','freq','frequency']);
+  const avgIdx = getHeaderIndex(headers, ['среднем за день','avg','average','day']);
+  const subjectIdx = getHeaderIndex(headers, ['предмет','subject','категор']);
+
+  if(queryIdx === -1) throw new Error('В файле не найдена колонка с запросом.');
+
+  const objects = dataRows.map(row => {
+    const query = normalizeWhitespace(String(row[queryIdx] || ''));
+    const count = Number(String(row[countIdx] || '').replace(/\s+/g,'').replace(',', '.')) || 0;
+    const avgDay = Number(String(row[avgIdx] || '').replace(/\s+/g,'').replace(',', '.')) || 0;
+    const subject = normalizeWhitespace(String(subjectIdx >= 0 ? row[subjectIdx] : workbookMeta.subject || ''));
+    return {query,count,avgDay,subject,source:'file'};
+  }).filter(item => item.query && item.query.toLowerCase() !== 'поисковый запрос');
+
+  const merged = new Map();
+  for(const item of objects){
+    const key = cleanText(item.query);
+    if(!key) continue;
+    const existing = merged.get(key);
+    if(!existing){
+      merged.set(key, {...item, norm:key});
+    }else{
+      existing.count = Math.max(existing.count || 0, item.count || 0);
+      existing.avgDay = Math.max(existing.avgDay || 0, item.avgDay || 0);
+      if(!existing.subject && item.subject) existing.subject = item.subject;
+    }
+  }
+  return [...merged.values()];
+}
+async function readKeywordFile(file){
+  const name = file.name.toLowerCase();
+  if(name.endsWith('.csv')){
+    const text = await file.text();
+    const rows = text.split(/\r?\n/).map(line => line.split(/;(?![^"]*")|,(?![^"]*")/).map(v => String(v || '').replace(/^"|"$/g,'')));
+    return {rows, meta:{}};
+  }
+  if((name.endsWith('.xlsx') || name.endsWith('.xls')) && window.XLSX){
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, {type:'array'});
+    let rows = [];
+    let meta = {};
+    wb.SheetNames.forEach(sheetName => {
+      const sheet = wb.Sheets[sheetName];
+      const arr = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+      if(sheetName.toLowerCase().includes('общ')) {
+        for(const row of arr){
+          const left = String(row[0] || '').toLowerCase();
+          const right = normalizeWhitespace(String(row[1] || ''));
+          if(left.includes('предмет') && right) meta.subject = right;
+        }
+      }
+      if(arr.some(row => row.some(cell => String(cell).toLowerCase().includes('поисковый запрос')))){
+        rows = arr;
+      }
+    });
+    if(!rows.length){
+      const first = wb.SheetNames[0];
+      rows = XLSX.utils.sheet_to_json(wb.Sheets[first], {header:1, defval:''});
+    }
+    return {rows, meta};
+  }
+  throw new Error('Поддерживаются только CSV и XLSX/XLS.');
+}
+async function fetchWbCard(token, query){
+  const url = 'https://content-api.wildberries.ru/content/v2/get/cards/list?locale=ru';
+  const body = {
+    settings:{
+      sort:{ascending:false},
+      filter:{textSearch:String(query).trim(),withPhoto:-1},
+      cursor:{limit:100}
+    }
+  };
+  const res = await fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':token},
+    body:JSON.stringify(body)
+  });
+  if(!res.ok){
+    const errText = await res.text().catch(() => '');
+    throw new Error(`WB API вернул ошибку ${res.status}. ${errText || 'Проверьте токен, доступы и CORS.'}`);
+  }
+  const data = await res.json();
+  const cards = Array.isArray(data?.cards) ? data.cards : Array.isArray(data?.data?.cards) ? data.data.cards : [];
+  if(!cards.length) throw new Error('Карточки по вашему запросу не найдены.');
+  const q = String(query).trim().toLowerCase();
+  const exact = cards.find(card => [String(card.nmID || ''),String(card.vendorCode || ''),String(card.title || '')].map(v => v.toLowerCase()).includes(q));
+  return exact || cards[0];
+}
+function getCardCharacteristicsMap(card){
+  const map = new Map();
+  for(const item of (card?.characteristics || [])){ map.set(Number(item.id || item.charcID || 0), item); }
+  return map;
+}
+async function fetchSubjectMeta(token, subjectId){
+  if(!subjectId) return null;
+  const url = `https://content-api.wildberries.ru/content/v2/object/charcs/${subjectId}?locale=ru`;
+  const res = await fetch(url,{headers:{Authorization:token}});
+  if(!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  return Array.isArray(data?.data) ? data.data : null;
+}
+
+function buildManualKeywordObjects(){
+  return splitCsvLike($('manualKeywords').value).map(query => ({
+    query,
+    count:0,
+    avgDay:0,
+    subject:'',
+    source:'manual',
+    norm:cleanText(query)
+  }));
+}
+function scoreQueryAgainstCard(queryObj, core){
+  const query = normalizeWhitespace(queryObj.query || '');
+  const queryNorm = cleanText(query);
+  const tokens = tokenize(queryNorm);
+  const forbidden = getAllForbiddenWords();
+  let score = 0;
+  const reasons = [];
+
+  if(!queryNorm || !tokens.length){
+    return {score:0,status:'excluded',reason:'Пустой или шумный запрос',tokens:[]};
+  }
+  if(isNoiseClusterQuery(queryNorm)){
+    return {score:0,status:'excluded',reason:'Шумный соседний кластер для текущего товара',tokens};
+  }
+  if(containsForbidden(queryNorm, forbidden)){
+    return {score:0,status:'excluded',reason:'Содержит персонажа, бренд или стоп-слово',tokens};
+  }
+
+  const overlapCore = tokens.filter(t => core.coreWords.includes(t));
+  const overlapCategory = tokens.filter(t => core.categoryWords.includes(t));
+  const overlapTitle = tokens.filter(t => core.titleWords.includes(t));
+  const overlapMaterial = tokens.filter(t => core.materialWords.includes(t));
+  const overlapPurpose = tokens.filter(t => core.purposeWords.includes(t));
+  const overlapBundle = tokens.filter(t => core.bundleWords.includes(t));
+  const overlapManual = tokens.filter(t => core.manualWords.includes(t));
+
+  const overlapRatio = overlapCore.length / Math.max(tokens.length, 1);
+
+  if(overlapCategory.length){ score += 35; reasons.push('Совпадает с категорией'); }
+  if(overlapMaterial.length){ score += 20; reasons.push('Совпадает с материалом'); }
+  if(overlapPurpose.length){ score += 15; reasons.push('Совпадает с назначением'); }
+  if(overlapBundle.length){ score += 15; reasons.push('Совпадает с комплектацией'); }
+  if(overlapTitle.length){ score += 12; reasons.push('Подтверждается названием'); }
+  if(overlapManual.length){ score += 10; reasons.push('Поддержан ручными ключами'); }
+  score += Math.round(overlapRatio * 20);
+
+  if(/\b(дешево|дёшево|недорого|скидка|распродажа|топ|хит|купить|цена)\b/.test(queryNorm)){
+    score -= 18; reasons.push('Есть мусорные коммерческие слова');
+  }
+  if(tokens.length === 1 && !overlapCategory.length){
+    score -= 26; reasons.push('Слишком общий однословный запрос');
+  }
+  if(!overlapCategory.length && overlapRatio < 0.34){
+    score -= 42; reasons.push('Слабая связь с ядром товара');
+  }
+  if(queryObj.subject){
+    const querySubjectTokens = tokenize(queryObj.subject);
+    const subjectOverlap = querySubjectTokens.filter(t => core.categoryWords.includes(t));
+    if(!subjectOverlap.length && core.categoryWords.length){
+      score -= 30; reasons.push('Запрос из соседнего предмета');
+    }
+  }
+  if(tokens.length > 8){
+    score -= 8; reasons.push('Слишком длинный хвост');
+  }
+  if(/любим(ой|ая|ому)|подруг(е|а|и)|ребенк(а|у)|мальчик(а|у)|девочк(и|а|е)/.test(queryNorm) && !/(ребен|детск|девоч|мальчик)/.test(core.title + ' ' + core.description + ' ' + core.subjectName)){
+    score -= 12; reasons.push('Аудитория не подтверждается карточкой');
+  }
+
+  score = Math.max(0, Math.min(100, score));
+  let status = 'accepted';
+  let reason = reasons.join('; ') || 'Подходит';
+  if(score < 45){ status = 'excluded'; }
+  else if(score < 70){ status = 'review'; }
+  return {score,status,reason,tokens};
+}
+function classifyFrequency(accepted){
+  const values = accepted.map(item => Math.max(item.count || 0, (item.avgDay || 0) * 30)).filter(v => v > 0).sort((a,b) => a - b);
+  const q = p => {
+    if(!values.length) return 0;
+    const idx = Math.min(values.length - 1, Math.max(0, Math.floor((values.length - 1) * p)));
+    return values[idx];
+  };
+  const p70 = q(.70);
+  const p35 = q(.35);
+
+  for(const item of accepted){
+    const val = Math.max(item.count || 0, (item.avgDay || 0) * 30);
+    const words = tokenize(item.query).length;
+    if(values.length){
+      if(val >= p70 && words <= 4) item.bucket = 'vch';
+      else if(val >= p35 || words <= 4) item.bucket = 'sch';
+      else item.bucket = 'nch';
+    }else{
+      if(words <= 2) item.bucket = 'vch';
+      else if(words <= 4) item.bucket = 'sch';
+      else item.bucket = 'nch';
+    }
+  }
+  return accepted;
+}
+function prepareKeywordSet(card, rows){
+  const core = buildCore(card);
+  const merged = new Map();
+
+  [...rows, ...buildManualKeywordObjects()].forEach(item => {
+    const norm = cleanText(item.query);
+    if(!norm) return;
+    const existing = merged.get(norm);
+    if(!existing){
+      merged.set(norm, {...item, norm});
+    }else{
+      existing.count = Math.max(existing.count || 0, item.count || 0);
+      existing.avgDay = Math.max(existing.avgDay || 0, item.avgDay || 0);
+      existing.source = existing.source === 'file' ? 'file' : item.source;
+      if(!existing.subject && item.subject) existing.subject = item.subject;
+    }
+  });
+
+  const evaluated = [...merged.values()].map(item => {
+    const scored = scoreQueryAgainstCard(item, core);
+    return {...item, ...scored};
+  });
+
+  const accepted = classifyFrequency(evaluated.filter(i => i.status === 'accepted')).sort((a,b) => b.score - a.score || (b.count || 0) - (a.count || 0));
+  const review = evaluated.filter(i => i.status === 'review').sort((a,b) => b.score - a.score);
+  const excluded = evaluated.filter(i => i.status === 'excluded').sort((a,b) => b.score - a.score);
+
+  return {
+    all:evaluated,
+    accepted,
+    review,
+    excluded,
+    vch:accepted.filter(i => i.bucket === 'vch'),
+    sch:accepted.filter(i => i.bucket === 'sch'),
+    nch:accepted.filter(i => i.bucket === 'nch'),
+    core
+  };
+}
+function queryToDisplay(item){
+  const sourceLabel = item.source === 'manual' ? 'ручной' : 'файл';
+  const freq = item.count || item.avgDay ? `Частотность: ${item.count || 0} / в день: ${item.avgDay || 0}` : 'Без частотности';
+  return `
+    <div class="query-item">
+      <strong>${escapeHtml(item.query)}</strong>
+      <small>${escapeHtml(item.reason || 'Подходит')}</small>
+      <div class="meta">
+        <span class="meta-badge ${item.source === 'manual' ? 'manual' : 'file'}">${sourceLabel}</span>
+        <span class="meta-badge ${item.status === 'accepted' ? 'good' : 'bad'}">релевантность: ${item.score || 0}</span>
+        <span class="meta-badge">${escapeHtml(freq)}</span>
+        ${item.subject ? `<span class="meta-badge">${escapeHtml(item.subject)}</span>` : ''}
+      </div>
+    </div>
+  `;
+}
+function renderQueryLists(classified){
+  const fill = (id, items, emptyText) => {
+    $(id).innerHTML = items.length ? items.slice(0,30).map(queryToDisplay).join('') : `<div class="query-item"><strong>${emptyText}</strong><small>Пока здесь пусто.</small></div>`;
+  };
+  fill('vchList', classified.vch, 'ВЧ не найдены');
+  fill('schList', classified.sch, 'СЧ не найдены');
+  fill('nchList', classified.nch, 'НЧ не найдены');
+  fill('reviewList', classified.review, 'Спорных запросов нет');
+  fill('excludedList', classified.excluded, 'Исключённых запросов нет');
+}
+function pickTopKeyword(classified, bucket){
+  const pool = bucket ? classified[bucket] : classified.accepted;
+  return pool.find(item => !containsForbidden(item.query, getAllForbiddenWords())) || null;
+}
+function getAddonFromPhrase(primary, phrase){
+  const pNorm = cleanText(primary);
+  const q = singularizeQueryStart(phrase);
+  const lower = cleanText(q);
+  if(!q || lower === pNorm) return '';
+
+  const explicitPatterns = [
+    /из [а-яё0-9-]+(?: [а-яё0-9-]+)?/i,
+    /с готов[а-яё ]*выкройк[а-яё]*/i,
+    /с выкройк[а-яё]*/i,
+    /с перфорац[а-яё]*/i,
+    /кукл[а-яё]*/i,
+    /игрушк[а-яё]*/i,
+    /мягк[а-яё ]*игрушк[а-яё]*/i,
+    /для девочк[а-яё]*/i,
+    /для мальчик[а-яё]*/i,
+    /детск[а-яё]*/i
+  ];
+  for(const rgx of explicitPatterns){
+    const match = q.match(rgx);
+    if(match){
+      const part = normalizeWhitespace(match[0]);
+      if(part && !pNorm.includes(cleanText(part))) return part;
+    }
+  }
+
+  const pTokens = new Set(tokenize(primary));
+  const diffTokens = tokenize(q).filter(t => !pTokens.has(t));
+  if(!diffTokens.length) return '';
+  const diff = normalizeWhitespace(diffTokens.join(' '));
+  if(diff.length < 3) return '';
+  return diff;
+}
+function buildTitleFromKeywords(card, classified){
+  const limit = 60;
+  const forbidden = getAllForbiddenWords();
+  const accepted = classified.accepted.filter(item => !containsForbidden(item.query, forbidden));
+  const vch = classified.vch.filter(item => !containsForbidden(item.query, forbidden));
+  const sch = classified.sch.filter(item => !containsForbidden(item.query, forbidden));
+  const nch = classified.nch.filter(item => !containsForbidden(item.query, forbidden));
+
+  const primary = normalizeQueryForTitle((vch[0] || sch[0] || accepted[0] || {query: card?.subjectName || card?.title || 'товар'}).query);
+  let result = primary || normalizeWhitespace(card?.subjectName || card?.title || 'Товар');
+
+  const addonCandidates = [];
+  const pushAddon = (text) => {
+    const value = normalizeWhitespace(text || '');
+    if(!value) return;
+    if(containsForbidden(value, forbidden)) return;
+    if(addonCandidates.some(v => cleanText(v) === cleanText(value))) return;
+    // Отсекаем слишком общие или мусорные куски
+    const norm = cleanText(value);
+    if(!norm) return;
+    if(norm.length < 3) return;
+    const tokens = tokenize(value);
+    if(tokens.length > 5) return;
+    if(/\b(дешево|дёшево|недорого|скидк|распродаж|купить|цена|оригинал)\b/i.test(norm)) return;
+    addonCandidates.push(value);
+  };
+
+  const primaryTokens = new Set(tokenize(primary));
+
+  const addFromQueries = (arr) => arr.slice(0, 12).forEach(item => {
+    const q = normalizeQueryForTitle(item.query);
+    if(!q) return;
+    const addon = getAddonFromPhrase(primary, q);
+    if(addon){
+      // Не добавляем то, что повторяет основу
+      const addonTokens = tokenize(addon);
+      const uniqueAddonTokens = addonTokens.filter(t => !primaryTokens.has(t));
+      if(uniqueAddonTokens.length) pushAddon(normalizeWhitespace(uniqueAddonTokens.join(' ')));
+    }
+    // Сохраняем «человеческие» конструкции, если они есть в запросе
+    const m1 = q.match(/\bиз [а-яё0-9-]+(?: [а-яё0-9-]+)?\b/i);
+    if(m1) pushAddon(m1[0]);
+    const m2 = q.match(/\bс [а-яё0-9-]+(?: [а-яё0-9-]+){0,2}\b/i);
+    if(m2) pushAddon(m2[0]);
+    const m3 = q.match(/\bдля [а-яё0-9-]+(?: [а-яё0-9-]+){0,2}\b/i);
+    if(m3) pushAddon(m3[0]);
+  });
+
+  addFromQueries(sch);
+  addFromQueries(nch);
+  addFromQueries(vch);
+
+  // Материал из характеристик как безопасное уточнение (коротко)
+  const materialRaw = sanitizeCharacteristicText(characteristicValue(card, /материал/i));
+  if(materialRaw){
+    const matTokens = tokenize(materialRaw).slice(0,2);
+    const matShort = matTokens.length ? matTokens.join(' ') : '';
+    if(matShort && !cleanText(result).includes(cleanText(matShort))) pushAddon(`из ${matShort}`);
+  }
+
+  // Итоговый подбор 1–2 уточнений по приоритету
+  const ordered = addonCandidates
+    .filter(v => v && cleanText(v) && cleanText(v) !== cleanText(primary))
+    .sort((a,b) => {
+      const wa = /^из /i.test(a) ? 0 : /^с /i.test(a) ? 1 : /^для /i.test(a) ? 2 : 3;
+      const wb = /^из /i.test(b) ? 0 : /^с /i.test(b) ? 1 : /^для /i.test(b) ? 2 : 3;
+      return wa - wb || a.length - b.length;
+    });
+
+  const selectedAddons = [];
+  for(const addon of ordered){
+    if(selectedAddons.length >= 2) break;
+    if(selectedAddons.some(v => cleanText(v) === cleanText(addon))) continue;
+    const next = normalizeWhitespace(`${result} ${addon}`);
+    if(next.length <= limit){
+      result = next;
+      selectedAddons.push(addon);
+    }
+  }
+
+  result = cleanupHumanText(result)
+    .replace(/\b(набор для шитья)\s+\1\b/gi,'$1')
+    .replace(/\bкуклы\s+куклы\b/gi,'куклы')
+    .replace(/\bиз фетра\s+из фетра\b/gi,'из фетра')
+    .replace(/\bс выкройками\s+с выкройками\b/gi,'с выкройками')
+    .replace(/\bсвоими руками\s+своими руками\b/gi,'своими руками');
+
+  if(result.length > limit) result = result.slice(0, limit).replace(/[\s,;:]+$/, '');
+  result = sentenceCase(result);
+
+  const normalizedTitle = cleanText(result);
+  const usedQueries = accepted.filter(item => {
+    const qTokens = tokenize(item.query);
+    if(!qTokens.length) return false;
+    const hits = qTokens.filter(t => normalizedTitle.includes(t));
+    return hits.length / qTokens.length >= 0.7;
+  }).slice(0,4).map(i => i.query);
+
+  return {title: result, usedQueries: unique(usedQueries)};
+}
+function buildHumanSeoDescription(card, classified, seasonContext, titleText=''){
+  const limit = getDescriptionLimit();
+  const forbidden = getAllForbiddenWords();
+  const accepted = classified.accepted.filter(item => !containsForbidden(item.query, forbidden) && !isNoiseClusterQuery(item.query));
+
+  const cardTitle = normalizeWhitespace(card?.title || '');
+  const cardSubject = normalizeWhitespace(card?.subjectName || '');
+  const cardDesc = normalizeWhitespace(card?.description || '');
+
+  const filteredVch = classified.vch.filter(i => !isNoiseClusterQuery(i.query) && !containsForbidden(i.query, forbidden));
+  const filteredSch = classified.sch.filter(i => !isNoiseClusterQuery(i.query) && !containsForbidden(i.query, forbidden));
+  const filteredNch = classified.nch.filter(i => !isNoiseClusterQuery(i.query) && !containsForbidden(i.query, forbidden));
+
+  const leadObj = filteredVch[0] || filteredSch[0] || accepted[0] || {query: cardSubject || cardTitle || 'набор для шитья из фетра'};
+  const lead = normalizeWhitespace(leadObj.query || '');
+  const secondary = normalizeWhitespace((filteredSch.find(i => cleanText(i.query) !== cleanText(lead)) || filteredNch[0] || {}).query || '');
+  const tail = normalizeWhitespace((filteredNch.find(i => ![lead,secondary].map(cleanText).includes(cleanText(i.query))) || {}).query || '');
+
+  const cleanedLead = normalizeQueryForTitle(titleText || lead) || normalizeWhitespace(cardSubject || cardTitle || 'Набор для шитья из фетра');
+  const cleanedSecondary = normalizeQueryForTitle(secondary);
+  const cleanedTail = normalizeQueryForTitle(tail);
+
+  const material = sanitizeCharacteristicText(characteristicValue(card, /материал/i));
+  const purpose = sanitizeCharacteristicText(characteristicValue(card, /назнач|примен|использ/i));
+  const feature = sanitizeCharacteristicText(characteristicValue(card, /особ|преим|форма|тип|вид/i));
+  const bundleItems = splitUsefulItems(characteristicValue(card, /комплект|комплектац|состав|колич|детал/i)).slice(0,6);
+  const brand = sanitizeCharacteristicText(card?.brand || '');
+
+  const seasonal = Array.isArray(seasonContext?.seasonalKeywords) ? seasonContext.seasonalKeywords : [];
+
+  const subjectTokens = tokenize(cardSubject);
+  const isKit = subjectTokens.includes('набор') || /\bнабор\b/i.test(cardTitle);
+  const isKids = /\b(детск|ребен|ребён|для девоч|для мальчик)\b/i.test(cleanText(cardTitle + ' ' + cardDesc + ' ' + cardSubject));
+  const isGiftOk = seasonContext?.modeLabel?.includes('праздник') || $('mode').value === 'holiday';
+
+  const safeSentence = (text) => {
+    const s = normalizeSentence(text);
+    if(!s) return '';
+    if(containsForbidden(s, forbidden)) return '';
+    return s;
+  };
+
+  const benefitsRaw = [
+    ...splitToBullets(feature),
+    ...splitToBullets(purpose),
+    ...splitToBullets(characteristicValue(card, /преим/i)),
+    ...splitToBullets(characteristicValue(card, /эффект|результат/i))
+  ];
+  const benefits = clampBullets(benefitsRaw
+    .map(v => v.replace(/^(есть|имеет|это)\s+/i,''))
+    .map(v => v.replace(/\b(переспам|seo|релевантност|выдач)\b/gi,''))
+    .filter(v => v && v.length <= 80 && !containsForbidden(v, forbidden))
+  , 6);
+
+  const usageHintsRaw = [
+    characteristicValue(card, /примен|использ/i),
+    cleanedSecondary,
+    cleanedTail
+  ].map(v => sanitizeCharacteristicText(v)).filter(Boolean);
+  const usageHints = clampBullets(
+    usageHintsRaw.flatMap(v => splitToBullets(v)).filter(v => v && v.length <= 90),
+    4
+  );
+
+  const kitBullets = bundleItems.length
+    ? bundleItems.map(v => smartTrimEnding(v)).filter(Boolean)
+    : [];
+
+  const subjectStart = safeSentence(`${sentenceCase(cleanedLead)} подходит для творчества дома и в школе`);
+  const s2 = purpose ? safeSentence(`Подходит для ${purpose}`) : safeSentence('Формат удобен для начинающих и понятен в процессе');
+  const s3 = material ? safeSentence(`Основной материал: ${material}`) : '';
+  const s4 = kitBullets.length ? safeSentence(`В комплекте: ${kitBullets.slice(0,6).join(', ')}`) : '';
+  const s5 = benefits.length ? safeSentence(`Преимущества: ${benefits.slice(0,5).join(', ')}`) : '';
+  const s6 = usageHints.length ? safeSentence(`Можно использовать для следующих сценариев: ${usageHints.slice(0,4).join(', ')}`) : '';
+  const s7 = safeSentence('Готовую мягкую игрушку удобно взять в дорогу, на прогулку или подвесить к рюкзаку');
+  const s8 = safeSentence('Такой формат помогает развивать усидчивость, внимание к деталям и интерес к рукоделию');
+  const s9 = isGiftOk ? safeSentence(`Подходит как подарок ребёнку; ближайший сезонный повод: ${(seasonContext?.upcomingHolidays || []).slice(0,2).join(', ') || seasonal.slice(0,2).join(', ')}`) : '';
+  const s10 = brand ? safeSentence(`Бренд: ${brand}`) : '';
+
+  const sentencePool = dedupeSimilarSentences([subjectStart,s2,s3,s4,s5,s6,s7,s8,s9,s10].filter(Boolean));
+  let plain = cleanupHumanText(sentencePool.join('. ').replace(/\.\./g,'.'));
+  plain = reduceKeywordSpam(plain);
+  if(containsSeoServicePhrase(plain)) plain = cleanupHumanText(removeSeoServicePhrases(plain));
+  plain = clipByLength(plain, limit);
+
+  // Для WB: единый цельный текст, без служебных заголовков внутри
+  const html = plain.split(/(?<=\.)\s+/).filter(Boolean).map(p => `<p>${escapeHtml(p)}</p>`).join('');
+
+  const usedQueries = accepted.filter(item => {
+    const qTokens = tokenize(item.query);
+    if(!qTokens.length) return false;
+    const hits = qTokens.filter(t => cleanText(plain).includes(t));
+    return hits.length / qTokens.length >= 0.7;
+  }).slice(0,18).map(i => i.query);
+
+  return {plain, html, usedQueries: unique(usedQueries)};
+}
+function buildCharacteristicRecommendations(card, seasonContext){
+  const chars = Array.isArray(card?.characteristics) ? card.characteristics : [];
+  const get = (nameRgx) => {
+    const item = chars.find(c => nameRgx.test(String(c.name || '')));
+    const raw = item ? (Array.isArray(item.value) ? item.value.join(', ') : String(item.value || '')) : '';
+    return sanitizeCharacteristicText(raw);
+  };
+  const upcoming = (seasonContext?.upcomingHolidays || []).filter(Boolean);
+  const recs = [];
+  const add = (field, choose, remove, why) => {
+    recs.push({field, choose: choose.filter(Boolean), remove: remove.filter(Boolean), why});
+  };
+  add(
+    'Назначение подарка',
+    ['для ребенка','для девочки','для мальчика'],
+    ['для любимой','подруге'],
+    'Значения должны быть релевантны товару и не содержать спорных формулировок.'
+  );
+  add(
+    'Вид творчества',
+    ['шитье','изготовление игрушек','набор для творчества'],
+    [],
+    'Эти значения точно отражают сценарий использования карточки.'
+  );
+  add(
+    'Комплектация',
+    ['безопасная пластиковая игла','инструкция','перфорированные детали из фетра','наполнитель синтепух'],
+    ['вещь рука','убрать ей'],
+    'В комплектации должны быть только фактические элементы без мусорных хвостов.'
+  );
+  add(
+    'Повод',
+    upcoming.slice(0,3),
+    ['8 марта','23 февраля','14 февраля'].filter(name => !upcoming.some(u => u.includes(name))),
+    'Оставляйте только актуальные или предстоящие праздники по текущей дате.'
+  );
+  const purposeNow = get(/назнач|примен|использ/i);
+  add(
+    'Назначение',
+    ['для творчества','для занятий с детьми','для начинающих'],
+    purposeNow ? [purposeNow] : [],
+    'Назначение должно быть нейтральным и понятным, без спорной аудитории.'
+  );
+  return recs;
+}
+function evaluateTitleResult(card, titleText, classified){
+  const problems = [];
+  let score = 10;
+
+  if(!titleText){
+    return {score:0, summary:'Нет нового наименования', problems:[{title:'Не удалось собрать название', details:'Нужно проверить ядро и загрузку файла запросов.'}]};
+  }
+  if(titleText.length > 60){
+    score -= 3.5;
+    problems.push({title:'Название превышает лимит', details:`Сейчас ${titleText.length} символов. Нужно сократить до 60.`});
+  }
+  if(titleText.length < 38){
+    score -= 1.5;
+    problems.push({title:'Название не использует потенциал длины', details:`Сейчас ${titleText.length} символов. Можно усилить точным уточнением.`});
+  }
+  if(containsForbidden(titleText, getAllForbiddenWords())){
+    score -= 4;
+    problems.push({title:'В названии есть запрещённая сущность', details:'Нужно убрать персонажей, чужие бренды и стоп-слова.'});
+  }
+  const repeats = countRepeatedRoots(titleText);
+  if(repeats.length){
+    score -= Math.min(2, repeats.length * 0.8);
+    problems.push({title:'Есть повторы слов', details:`Повторы: ${repeats.join(', ')}.`});
+  }
+  if(!classified.vch.length){
+    score -= 1.3;
+    problems.push({title:'Не хватает сильного ВЧ-запроса', details:'Проверь файл запросов и фильтрацию ядра.'});
+  }
+  score = Math.max(0, Math.min(10, Number(score.toFixed(1))));
+  return {score, summary: score >= 8.5 ? 'Наименование выглядит сильнее' : 'Название ещё можно усилить', problems};
+}
+function evaluateDescriptionResult(description, classified){
+  const problems = [];
+  let score = 10;
+
+  if(!description){
+    return {score:0, summary:'Описание не собрано', problems:[{title:'Нет описания', details:'Нужно проверить ядро и генерацию текста.'}]};
+  }
+  if(description.length > getDescriptionLimit()){
+    score -= 3.2;
+    problems.push({title:'Описание длиннее лимита', details:`Сейчас ${description.length} символов при лимите ${getDescriptionLimit()}.`});
+  }else if(description.length < 300){
+    score -= 1.7;
+    problems.push({title:'Описание слишком короткое', details:'Нужно раскрыть товар, комплектацию и сценарии использования.'});
+  }else if(description.length < 520){
+    score -= 0.6;
+    problems.push({title:'Описание можно усилить', details:'Добавьте больше конкретики: комплектацию/особенности/сценарии.'});
+  }
+  if(containsForbidden(description, getAllForbiddenWords())){
+    score -= 4;
+    problems.push({title:'В описании есть запрещённая сущность', details:'Нужно убрать персонажей, бренды и стоп-слова.'});
+  }
+  if(containsSeoServicePhrase(description)){
+    score -= 3.2;
+    problems.push({title:'В описании есть служебные SEO-фразы', details:'Текст должен говорить о товаре, а не объяснять SEO-логику.'});
+  }
+  const repeats = countRepeatedRoots(description);
+  if(repeats.length > 5){
+    score -= 1.5;
+    problems.push({title:'Есть риск переспама', details:`Слишком частые повторы: ${repeats.slice(0,6).join(', ')}.`});
+  }
+  if(classified.usedDescriptionQueries){
+    if(classified.usedDescriptionQueries.length < 2){
+      score -= 0.8;
+      problems.push({title:'Мало полезных ключей в описании', details:'Описание может быть слишком общим. Добавьте 1–2 релевантных хвоста из ядра.'});
+    }else if(classified.usedDescriptionQueries.length >= 4 && repeats.length <= 5 && description.length >= 520){
+      score += 0.4; // мягкий бонус за «плотность смысла» без спама
+    }
+  }
+  score = Math.max(0, Math.min(10, Number(score.toFixed(1))));
+  return {score, summary: score >= 8.5 ? 'Описание стало читабельнее' : 'Описание ещё можно сделать сильнее', problems};
+}
+function evaluateKernel(classified){
+  const problems = [];
+  let score = 10;
+  if(!classified.accepted.length){
+    return {score:0, summary:'Нет принятого ядра', problems:[{title:'После фильтрации ядро пустое', details:'Нужно расширить файл запросов или проверить релевантность.'}]};
+  }
+  if(!classified.vch.length){
+    score -= 2.5;
+    problems.push({title:'Не найден ВЧ-кластер', details:'Для названия не хватает сильного широкого запроса.'});
+  }
+  if(classified.review.length > classified.accepted.length){
+    score -= 1.6;
+    problems.push({title:'Слишком много спорных запросов', details:'Файл загрязнён соседними кластерами или слишком широкими формулировками.'});
+  }
+  const forbiddenLeaks = [...classified.accepted, ...classified.review].filter(item => containsForbidden(item.query, getAllForbiddenWords()));
+  if(forbiddenLeaks.length){
+    score -= 4;
+    problems.push({title:'Есть утечки запрещённых сущностей', details:'Стоп-лист нужно ужесточить или почистить файл.'});
+  }
+  score = Math.max(0, Math.min(10, Number(score.toFixed(1))));
+  return {score, summary: score >= 8.5 ? 'Ядро выглядит чистым' : 'Ядро требует доработки', problems};
+}
+function evaluateMedia(card){
+  const photos = Array.isArray(card?.photos) ? card.photos : [];
+  const problems = [];
+  let score = 10;
+  if(!photos.length){
+    return {score:1.2, summary:'Нет фото', problems:[{title:'Отсутствуют фото', details:'Без фото карточка выглядит незавершённой.'}], tests:[]};
+  }
+  if(photos.length === 1){
+    score -= 1.8;
+    problems.push({title:'Слишком мало фото', details:'Одного изображения обычно недостаточно для сильной карточки.'});
+  }else if(photos.length < 4){
+    score -= 0.9;
+    problems.push({title:'Можно усилить фотоконтент', details:'Нужны дополнительные ракурсы, детали и сценарии использования.'});
+  }
+  if(!card?.video){
+    score -= 0.4;
+    problems.push({title:'Нет видео', details:'Видео не обязательно, но может усилить доверие и понимание товара.'});
+  }
+  const tests = [
+    {title:'Тест главного фото по простоте', details:'Сравни текущий главный кадр с вариантом, где товар крупнее, чище фон и меньше второстепенных деталей.'},
+    {title:'Тест подачи УТП', details:'Проверь вариант без текста на фото и вариант с одной аккуратной выгодой без перегруза.'},
+    {title:'Тест сценария использования', details:'Если товар прикладной, попробуй кадр с понятным контекстом применения вместо сухого предметного фото.'}
+  ];
+  score = Math.max(0, Math.min(10, Number(score.toFixed(1))));
+  return {score, summary: score >= 8.5 ? 'Медиа выглядит рабочим' : 'Медиа стоит усилить', problems, tests};
+}
+function renderProblems(targetId, items){
+  $(targetId).innerHTML = items && items.length
+    ? items.map(item => `<div class="problem"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.details)}</small></div>`).join('')
+    : `<div class="problem"><strong>Явных проблем не найдено</strong><small>Блок выглядит достаточно уверенно.</small></div>`;
+}
+function renderCardInfo(card){
+  const photos = Array.isArray(card?.photos) ? card.photos : [];
+  const descLen = normalizeWhitespace(card?.description || '').length;
+  $('cardInfoKv').innerHTML = `
+    <div>Артикул WB</div><div class="mono">${escapeHtml(String(card?.nmID || '—'))}</div>
+    <div>Артикул продавца</div><div class="mono">${escapeHtml(String(card?.vendorCode || '—'))}</div>
+    <div>Категория</div><div>${escapeHtml(card?.subjectName || '—')}</div>
+    <div>Бренд</div><div>${escapeHtml(card?.brand || '—')}</div>
+    <div>Фото</div><div>${photos.length} шт.</div>
+    <div>Описание</div><div>${descLen} символов</div>
+    <div>Материал</div><div>${escapeHtml(characteristicValue(card, /материал/i) || '—')}</div>
+    <div>Комплектация</div><div>${escapeHtml(characteristicValue(card, /комплект|комплектац|состав|колич|детал/i) || '—')}</div>
+  `;
+  $('currentTitle').textContent = card?.title || 'Нет данных';
+  $('currentDescription').textContent = card?.description || 'Нет данных';
+  $('photoStrip').innerHTML = photos.length
+    ? photos.slice(0,6).map((photo, index) => {
+      const src = photo.big || photo.c516x688 || photo.c246x328 || photo.square || photo.tm || '';
+      return `<div class="photo-card"><h4>Фото ${index + 1}</h4>${src ? `<img src="${escapeHtml(src)}" alt="Фото ${index + 1}">` : ''}<p>${index === 0 ? 'Главный кадр. Его стоит тестировать отдельно.' : 'Дополнительный кадр для ракурса или деталей.'}</p></div>`;
+    }).join('')
+    : `<div class="photo-card"><h4>Фото отсутствуют</h4><p>Если медиа не загружены, аудит фото будет неполным.</p></div>`;
+}
+function renderSummary(audit){
+  $('scoreTotal').textContent = audit.total.toFixed(1);
+  $('scoreTitle').textContent = audit.title.score.toFixed(1);
+  $('scoreDescription').textContent = audit.description.score.toFixed(1);
+  $('scoreKernel').textContent = audit.kernel.score.toFixed(1);
+
+  $('scoreTotalDesc').textContent = audit.total >= 8.5 ? 'Карточка выглядит сильнее' : audit.total >= 6.5 ? 'Карточка рабочая, но есть точки роста' : 'Карточка требует серьёзной доработки';
+  $('scoreTitleDesc').textContent = audit.title.summary;
+  $('scoreDescriptionDesc').textContent = audit.description.summary;
+  $('scoreKernelDesc').textContent = audit.kernel.summary;
+
+  const pills = [];
+  if(audit.title.score < 8.5) pills.push({text:'Нужно усилить наименование', cls:'warn'});
+  if(audit.description.score < 8.5) pills.push({text:'Нужно улучшить описание', cls:'warn'});
+  if(audit.kernel.score < 8.5) pills.push({text:'Ядро загрязнено или слабое', cls:'bad'});
+  if(audit.media.score < 8.5) pills.push({text:'Есть гипотезы для фото', cls:'info'});
+  if(!pills.length) pills.push({text:'Критичных проблем не найдено', cls:'good'});
+  $('topPills').innerHTML = pills.map(p => `<span class="pill ${p.cls}">${escapeHtml(p.text)}</span>`).join('');
+
+  $('titleScoreBadge').textContent = `${audit.title.score.toFixed(1)} / 10`;
+  $('descriptionScoreBadge').textContent = `${audit.description.score.toFixed(1)} / 10`;
+  $('kernelScoreBadge').textContent = `${audit.kernel.score.toFixed(1)} / 10`;
+  $('mediaScoreBadge').textContent = `${audit.media.score.toFixed(1)} / 10`;
+
+  $('titleBar').style.width = `${audit.title.score * 10}%`;
+  $('descriptionBar').style.width = `${audit.description.score * 10}%`;
+  $('kernelBar').style.width = `${audit.kernel.score * 10}%`;
+  $('mediaBar').style.width = `${audit.media.score * 10}%`;
+
+  renderProblems('titleProblems', audit.title.problems);
+  renderProblems('descriptionProblems', audit.description.problems);
+  renderProblems('kernelProblems', audit.kernel.problems);
+  renderProblems('mediaProblems', audit.media.problems);
+
+  $('testHypotheses').innerHTML = audit.media.tests.map(t => `<div class="test"><strong>${escapeHtml(t.title)}</strong><small>${escapeHtml(t.details)}</small></div>`).join('');
+}
+function renderGenerated(result, classified, seasonContext){
+  const recHtml = (result.charRecommendations || []).map(r => `
+    <div class="solution">
+      <strong>${escapeHtml(r.field)}</strong>
+      <small>Что выбрать: ${escapeHtml(r.choose.join(', ') || '—')}<br>Что убрать: ${escapeHtml(r.remove.join(', ') || '—')}<br>Почему: ${escapeHtml(r.why)}</small>
+    </div>
+  `).join('');
+  $('titleSolutionList').innerHTML = `
+    <div class="solution">
+      <strong>${escapeHtml(result.title)}</strong>
+      <small>Новое название собрано только из разрешённого ядра и в пределах лимита WB.</small>
+    </div>
+    <div class="solution">
+      <strong>Почему так лучше</strong>
+      <small>В основе один сильный ВЧ-запрос, затем точное уточнение без дублирования основы и без персонажей.</small>
+    </div>
+    ${recHtml}
+  `;
+  $('htmlPreview').innerHTML = result.html;
+  $('solutionMetaKv').innerHTML = `
+    <div>Лимит описания</div><div>${getDescriptionLimit()} символов</div>
+    <div>Режим</div><div>${escapeHtml(seasonContext.modeLabel)}</div>
+    <div>Сезонный угол</div><div>${escapeHtml(seasonContext.angle)}</div>
+    <div>Использованные ключи</div><div>${escapeHtml(unique([...result.usedTitleQueries, ...result.usedDescriptionQueries]).join(', ') || 'Не найдены')}</div>
+    <div>Кластеры ВЧ/СЧ/НЧ</div><div>${escapeHtml(`ВЧ: ${result.usedVch || 0}, СЧ: ${result.usedSch || 0}, НЧ: ${result.usedNch || 0}`)}</div>
+  `;
+  const fillUsed = (id, arr, emptyText) => {
+    $(id).innerHTML = arr.length
+      ? arr.map(query => `<div class="query-item"><strong>${escapeHtml(query)}</strong><small>Запрос реально вошёл в итоговый текст.</small></div>`).join('')
+      : `<div class="query-item"><strong>${emptyText}</strong><small>Пока здесь пусто.</small></div>`;
+  };
+  fillUsed('usedTitleQueries', result.usedTitleQueries, 'В название ничего не вошло');
+  fillUsed('usedDescriptionQueries', result.usedDescriptionQueries, 'В описание ничего не вошло');
+}
+async function loadCardFlow(){
+  saveSettings();
+  setStatus('Загрузка карточки...', 'info');
+  try{
+    let card = null;
+    let subjectMeta = null;
+
+    const manualJson = $('manualJson').value.trim();
+    if(manualJson && isLikelyJson(manualJson)){
+      const parsed = safeJsonParse(manualJson);
+      card = normalizeCardPayload(parsed);
+      if(!card) throw new Error('Не удалось распознать карточку в ручном JSON.');
+      setStatus('Карточка загружена из ручного JSON.', 'success');
+    }else{
+      const token = $('wbToken').value.trim();
+      const query = $('productQuery').value.trim();
+      if(!token) throw new Error('Введите WB API token.');
+      if(!query) throw new Error('Введите артикул, nmID или vendorCode.');
+      card = await fetchWbCard(token, query);
+      subjectMeta = await fetchSubjectMeta(token, card.subjectID).catch(() => null);
+      setStatus('Карточка успешно загружена из WB API.', 'success');
+    }
+    state.card = card;
+    state.subjectMeta = subjectMeta;
+    state.seasonContext = detectSeasonContext($('mode').value, card);
+    renderCardInfo(card);
+  }catch(err){
+    console.error(err);
+    setStatus(err.message || 'Не удалось загрузить карточку.', 'error');
+  }
+}
+async function processKeywordFile(){
+  const file = $('keywordFile').files[0];
+  if(!file){
+    state.rawKeywordRows = [];
+    state.keywordObjects = [];
+    return;
+  }
+  const {rows, meta} = await readKeywordFile(file);
+  const objects = rowsToKeywordObjects(rows, meta);
+  state.rawKeywordRows = rows;
+  state.keywordObjects = objects;
+}
+function buildAudit(card, classified, generated){
+  const titleAudit = evaluateTitleResult(card, generated.title, classified);
+  classified.usedDescriptionQueries = generated.usedDescriptionQueries;
+  const descAudit = evaluateDescriptionResult(generated.plain, classified);
+  const kernelAudit = evaluateKernel(classified);
+  const mediaAudit = evaluateMedia(card);
+  const total = Number(((titleAudit.score + descAudit.score + kernelAudit.score + mediaAudit.score) / 4).toFixed(1));
+  return {total, title:titleAudit, description:descAudit, kernel:kernelAudit, media:mediaAudit};
+}
+async function analyzeFlow(generate = false){
+  saveSettings();
+  if(!state.card){
+    setStatus('Сначала загрузите карточку.', 'error');
+    return;
+  }
+  try{
+    await processKeywordFile();
+    state.seasonContext = detectSeasonContext($('mode').value, state.card);
+    const classified = prepareKeywordSet(state.card, state.keywordObjects);
+    state.classified = classified;
+    renderQueryLists(classified);
+
+    const titleResult = buildTitleFromKeywords(state.card, classified);
+    const descResult = buildHumanSeoDescription(state.card, classified, state.seasonContext, titleResult.title);
+    const charRecommendations = buildCharacteristicRecommendations(state.card, state.seasonContext);
+    const usedSet = new Set(descResult.usedQueries.map(q => cleanText(q)));
+    const usedVch = classified.vch.filter(i => usedSet.has(cleanText(i.query))).length;
+    const usedSch = classified.sch.filter(i => usedSet.has(cleanText(i.query))).length;
+    const usedNch = classified.nch.filter(i => usedSet.has(cleanText(i.query))).length;
+    state.generated = {
+      title:titleResult.title,
+      html:descResult.html,
+      plain:descResult.plain,
+      usedTitleQueries:titleResult.usedQueries,
+      usedDescriptionQueries:descResult.usedQueries,
+      charRecommendations,
+      usedVch,
+      usedSch,
+      usedNch
+    };
+    state.audit = buildAudit(state.card, classified, state.generated);
+    renderSummary(state.audit);
+    renderGenerated(state.generated, classified, state.seasonContext);
+    setStatus(generate ? 'Готовое решение сформировано.' : 'Карточка проверена.', 'success');
+  }catch(err){
+    console.error(err);
+    setStatus(err.message || 'Не удалось обработать файл запросов.', 'error');
+  }
+}
+async function copyText(value, msg){
+  try{
+    await navigator.clipboard.writeText(value);
+    setStatus(msg, 'success');
+  }catch(e){
+    setStatus('Не удалось скопировать в буфер обмена.', 'error');
+  }
+}
+function buildReportJson(){
+  return {
+    exportedAt:new Date().toISOString(),
+    settings:{
+      mode:$('mode').value,
+      modeLabel:getModeLabel($('mode').value),
+      descriptionLimit:getDescriptionLimit(),
+      focus:$('focus').value.trim(),
+      manualKeywords:splitCsvLike($('manualKeywords').value),
+      forbiddenWords:splitCsvLike($('forbiddenWords').value)
+    },
+    card:state.card,
+    classified:state.classified,
+    generated:state.generated,
+    audit:state.audit
+  };
+}
+function downloadReport(){
+  const blob = new Blob([JSON.stringify(buildReportJson(), null, 2)], {type:'application/json;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `wb-seo-audit-v5-${state.card?.nmID || 'report'}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  setStatus('Отчёт JSON скачан.', 'success');
+}
+function clearForm(){
+  ['wbToken','productQuery','focus','manualKeywords','forbiddenWords','manualJson'].forEach(id => $(id).value = '');
+  $('mode').value = 'standard';
+  $('descriptionLimit').value = '2000';
+  $('keywordFile').value = '';
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+function attachEvents(){
+  ['wbToken','productQuery','mode','descriptionLimit','focus','manualKeywords','forbiddenWords','manualJson']
+    .forEach(id => $(id).addEventListener('input', saveSettings));
+  $('loadBtn').addEventListener('click', loadCardFlow);
+  $('analyzeBtn').addEventListener('click', () => analyzeFlow(false));
+  $('generateBtn').addEventListener('click', () => analyzeFlow(true));
+  $('clearBtn').addEventListener('click', clearForm);
+  $('copyHtmlBtn').addEventListener('click', () => copyText(state.generated?.html || '', 'HTML-описание скопировано.'));
+  $('copyTitleBtn').addEventListener('click', () => copyText(state.generated?.title || '', 'Наименование скопировано.'));
+  $('copyTextBtn').addEventListener('click', () => copyText(state.generated?.plain || '', 'Текст без HTML скопирован.'));
+  $('downloadBtn').addEventListener('click', downloadReport);
+}
+loadSettings();
+attachEvents();
+</script>
+</body>
+</html>
