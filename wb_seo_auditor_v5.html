@@ -20,6 +20,14 @@
       --shadow:0 12px 28px rgba(15,23,42,.08);
       --radius:18px;
     }
+    :root[data-theme="dark"]{
+      --bg:#0b1220;
+      --card:#0f172a;
+      --line:#27324a;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --shadow:0 12px 28px rgba(0,0,0,.45);
+    }
     *{box-sizing:border-box}
     body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
     .wrap{width:min(1480px,calc(100% - 28px));margin:22px auto 40px}
@@ -91,6 +99,56 @@
     .meta-badge.generated{background:rgba(249,115,22,.08);color:#c2410c}
     .meta-badge.good{background:rgba(21,128,61,.08);color:#166534}
     .meta-badge.bad{background:rgba(185,28,28,.08);color:#991b1b}
+
+    /* Dark theme overrides for hardcoded light colors */
+    :root[data-theme="dark"] .hero,
+    :root[data-theme="dark"] .panel,
+    :root[data-theme="dark"] .card{
+      background:var(--card);
+      border-color:rgba(255,255,255,.12);
+    }
+    :root[data-theme="dark"] .hero{
+      background:linear-gradient(135deg,rgba(109,40,217,.18),rgba(249,115,22,.14));
+      border-color:rgba(255,255,255,.12);
+    }
+    :root[data-theme="dark"] .pill{
+      background:rgba(255,255,255,.06);
+      border-color:rgba(255,255,255,.12);
+      color:var(--text);
+    }
+    :root[data-theme="dark"] input,
+    :root[data-theme="dark"] textarea,
+    :root[data-theme="dark"] select{
+      background:#0b1220;
+      border-color:rgba(255,255,255,.14);
+      color:var(--text);
+    }
+    :root[data-theme="dark"] .box,
+    :root[data-theme="dark"] .problem,
+    :root[data-theme="dark"] .solution,
+    :root[data-theme="dark"] .query-item,
+    :root[data-theme="dark"] .test,
+    :root[data-theme="dark"] .preview,
+    :root[data-theme="dark"] .photo-card,
+    :root[data-theme="dark"] .metric{
+      background:rgba(255,255,255,.03);
+      border-color:rgba(255,255,255,.12);
+    }
+    :root[data-theme="dark"] .meta-badge,
+    :root[data-theme="dark"] .chip{
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+    }
+    :root[data-theme="dark"] .btn2{
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-color:rgba(255,255,255,.12);
+    }
+    :root[data-theme="dark"] .btn4{
+      background:transparent;
+      color:var(--text);
+      border-color:rgba(255,255,255,.20);
+    }
     @media (max-width:1180px){
       .grid{grid-template-columns:1fr}
       .panel{position:static}
@@ -189,6 +247,7 @@
         <button class="btn2" id="analyzeBtn">Проверить карточку</button>
         <button class="btn3" id="generateBtn">Сгенерировать решение</button>
         <button class="btn4" id="clearBtn">Очистить форму</button>
+        <button class="btn2" id="themeToggleBtn" type="button">Тема: светлая</button>
       </div>
 
       <div class="status" id="statusBox">Статус: ожидание загрузки карточки.</div>
@@ -377,6 +436,7 @@
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 const STORAGE_KEY = 'wb_seo_auditor_v5';
+const THEME_KEY = 'wb_seo_theme_v1';
 const STOPWORDS = ['и','в','во','на','по','под','для','из','с','со','к','ко','о','об','от','до','или','а','но','как','это','этот','эта','эти','у','же','не','его','ее','её','их','над','при','без','бы','то','за','мы','вы','они','она','он','быть','можно','такой','такая','такие','товар','вариант'];
 const SEO_SERVICE_PHRASES = [
   'переспам','релевантность','seo','seo-текст','хвост поиска','нативно','нативный','естественно встроен',
@@ -411,6 +471,29 @@ const state = {
 };
 
 const $ = id => document.getElementById(id);
+
+function applyTheme(theme){
+  document.documentElement.dataset.theme = theme;
+  const btn = $('themeToggleBtn');
+  if(btn){
+    btn.textContent = theme === 'dark' ? 'Тема: тёмная' : 'Тема: светлая';
+  }
+}
+function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  if(saved === 'dark' || saved === 'light'){
+    applyTheme(saved);
+    return;
+  }
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(prefersDark ? 'dark' : 'light');
+}
+function toggleTheme(){
+  const current = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+}
 
 function saveSettings(){
   const data = {
@@ -1657,12 +1740,15 @@ function attachEvents(){
   $('analyzeBtn').addEventListener('click', () => analyzeFlow(false));
   $('generateBtn').addEventListener('click', () => analyzeFlow(true));
   $('clearBtn').addEventListener('click', clearForm);
+  const themeBtn = $('themeToggleBtn');
+  if(themeBtn) themeBtn.addEventListener('click', toggleTheme);
   $('copyHtmlBtn').addEventListener('click', () => copyText(state.generated?.html || '', 'HTML-описание скопировано.'));
   $('copyTitleBtn').addEventListener('click', () => copyText(state.generated?.title || '', 'Наименование скопировано.'));
   $('copyTextBtn').addEventListener('click', () => copyText(state.generated?.plain || '', 'Текст без HTML скопирован.'));
   $('downloadBtn').addEventListener('click', downloadReport);
 }
 loadSettings();
+initTheme();
 attachEvents();
 </script>
 </body>
